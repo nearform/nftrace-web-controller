@@ -1,0 +1,118 @@
+<div class='jumbotron'>
+	<h1>{{title}}</h1>
+	<p>Welcome to {{title}}. A tool for tracing linux with node.js.</p>
+</div>
+
+<div class="container">
+	<div class="row">
+		<div class="col-sm-8">
+			<div class="panel-group" id="accordion">
+				<div class="panel panel-default" id='tracepointSections'>
+					<div class="panel-heading" id='userlandSection'>
+						<a class="panel-title" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+							<h4>Userland Tracepoints.</h4>
+						</a>
+					</div>
+					<div id="collapseOne" class="panel-collapse collapse" aria-expanded="false">
+						<div class="panel-body">
+							{{#if processes}}
+								<div id='processes'>
+									<div class="panel-group" id="procAccordion">
+										{{#each processes}}
+											<div class="panel panel-default">
+												<div class='panel-heading'>
+													<div class='container-fluid'>
+														<div class='row'>
+															<div class='col-sm-8'>
+																<a class="panel-title" data-toggle="collapse" data-parent="#procAccordion" href="#collapse{{id}}">
+																	<h5>{{name}} (PID: {{id}})</h5>
+																	<h6>Ran with args:{{#each args}} {{this}} {{/each}}	</h6>
+																</a>
+															</div>
+															<div class='col-sm-4'>
+																<label class="checkbox">
+																	<input type="checkbox" id="procCheck" name="procCheck" data="{{id}}">
+																		Enable all tracepoints on this process 
+																	</input>
+																</label>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div id='collapse{{id}}' class="panel-collapse collapse" aria-expanded="false">
+													<div class='panel-body'>
+														{{#each events}}
+															<div id ='tracepoint'>
+																<label class="checkbox-inline">
+							    	        			<input type="checkbox" id="procTPCheck" name="procTPCheck" data="{{name}};{{../id}}"> {{name}} (loglevel:{{loglevel}}) (type:{{type}}) </input>
+							    	    				</label>
+							    	    			</div>
+														{{/each}}
+													</div>
+												</div>
+											</div>
+										{{/each}}
+									</div>
+								</div>
+							{{else}}
+								<div id='processesError'>
+									<h5>
+										{{processesError}}
+									</h5>
+								</div>
+							{{/if}}
+						</div>
+					</div>
+				</div>
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<a class="panel-title" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+							<h4>Kernel Tracepoints.</h4>
+						</a>
+					</div>
+					<div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false">
+						<div class="panel-body">
+							{{#if kernelTracepoints}}
+								<div id='kernelTracepoints'>
+									{{#each kernelTracepoints}}
+										<div id='kernelTracepoint'>
+											<label class="checkbox-inline">
+							            		<input type="checkbox" id="kernelTP" name="kernelTP" data="{{name}}"> {{name}} (loglevel:{{loglevel}}) (type:{{type}}) </input>
+							        		</label>
+										</div>
+									{{/each}}
+								</div>
+							{{else}}
+								<div id='kernelError'>
+									<h5>
+										{{kernelError}}
+									</h5>
+								</div>
+							{{/if}}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="viewevents">
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4> Session Controller </h4>
+				</div>
+				<div class="panel-body" id="sessionController">
+					<label>Comma seperated custom userland tracepoints (e.g. node:*,node:gc*,myNamespace:my_tracepoint)</label> <br>
+    			<textarea class="form-control" rows="3" id="customTracepoints"> </textarea>
+    			<br>
+    			<button class="btn btn-default" type="submit" id="startTracing">Start tracing session</button>
+				</div>
+			</div>
+			<div id="activeTraceSessions">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/javascripts/index.js"></script>
