@@ -52,6 +52,8 @@ $('button#startTracing').click(function(){
 });
 
 function initSessionDiv(){
+    var socket;
+
 	$('button#stopTracing').click(function(){
 		var sess = $(this).attr("data");
 		$.ajax({
@@ -61,19 +63,35 @@ function initSessionDiv(){
     			console.log(data);
     			if(data){
     				$('div#session'+sess).remove();
-    			}
+                    $('div#viewtracepanel'+sess).remove();
+    			     if(socket){
+                        socket.disconnect();
+                     }
+                }
     		}
     	});
 	});
 
 	$('button#viewTrace').click(function(){
+        var sess = $(this).attr("data");
 		var div = $('div#viewevents');
-		div.append();
-		var socket = io();
+		div.append('<div class="panel panel-default" id="viewtracepanel'+sess+'"><div class="panel-heading"><h5>Trace view for session '+
+                    sess+'</h5> <button class="btn btn-danger" type="submit" id="stopTracing" data="' + sess + 
+                    '">Stop tracing session</button></div><div class="panel-body fixed-panel" id="viewtrace' + sess + '"></div></div>');
+		socket = io({forceNew: true});
 		socket.on('data', function(data){
+            var div = $('div#viewtrace' + sess);
 			console.log(data);
-			div.append(data.name+"\n<br>");
+            var output = '<p>Host: ' + data.host + '. Tracepoint: ' + data.name + '. CPU: ' + data.cpuId + ' Time: ' + data.time + '. <p class="indent">';
+            var info = Object.keys(data.eventData);
+            info.forEach(function(elem){
+                output += elem + ': ' + data.eventData[elem] + '. ';
+            });
+            output += '</p></p>'
+			div.append(output);
+             $('div#viewtrace' + sess).scrollTop($('div#viewtrace' + sess)[0].scrollHeight);
 		});
+        initSessionDiv();
 	});
 }
 

@@ -51,10 +51,9 @@ var server = http.createServer(app).listen(port);
 
 var io = require('socket.io').listen(server);
 
-io
-.of('/viewtrace')
-.on('connection', function(socket){
+io.on('connection', function(socket){
   console.log('connected');
+  var connected = true;
 
   var pt = new stream.PassThrough({objectMode: true});
   cont.getEventStream(pt);
@@ -62,7 +61,14 @@ io
   pt.on('readable', function(){
     var chunk;
     while(null !== (chunk = pt.read())){
-      socket.emit('data', chunk);
+      if(connected) socket.emit('data', chunk);
     }
+  });
+
+  socket.on('disconnect', function () {
+    console.log('disconnected');
+    connected = false;
+    socket.disconnect();
+    pt.pause();
   });
 });

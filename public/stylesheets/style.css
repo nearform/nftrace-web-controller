@@ -42,3 +42,13 @@ input[type=checkbox][id=procCheck]{
   -webkit-transform: scale(4); /* Safari and Chrome */
   -o-transform: scale(4); /* Opera */
 }
+
+.fixed-panel {
+  min-height: 30em;
+  max-height: 30em;
+  overflow-y: scroll;
+}
+
+.indent{
+  margin-left: 20px;
+}
