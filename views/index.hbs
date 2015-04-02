@@ -103,12 +103,37 @@
 				</div>
 				<div class="panel-body" id="sessionController">
 					<label>Comma seperated custom userland tracepoints (e.g. node:*,node:gc*,myNamespace:my_tracepoint)</label> <br>
-    			<textarea class="form-control" rows="3" id="customTracepoints"> </textarea>
-    			<br>
-    			<button class="btn btn-default" type="submit" id="startTracing">Start tracing session</button>
+    					<textarea class="form-control" rows="3" id="customTracepoints"> </textarea>
+    					<br>
+    					<button class="btn btn-default" type="submit" id="startTracing">Start tracing session</button>
 				</div>
 			</div>
-			<div id="activeTraceSessions">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4> current sessions </h4>
+				</div>
+				<div class="panel-body" id="activeTraceSessions">
+					{{#if sessions}}
+						{{#each sessions}}
+							<div id="session{{#each name}}{{this}}{{/each}}">
+    						<div class="panel panel-default">
+    							<div class="panel-heading">
+    								<h5> Session {{#each name}} {{this}} {{/each}}</h5>
+    							</div>
+    							<div class="panel-body">
+    								<p>
+    									additional info to be put in here later...
+    								</p>
+    								<button class="btn btn-danger" type="submit" id="stopTracing" data="{{#each name}}{{this}}{{/each}}">Stop tracing session</button>
+    								<button class="btn btn-info" type="submit" id="viewTrace" data="{{#each name}}{{this}}{{/each}}">View tracing session</button>
+    							</div>
+    						</div>
+    					</div>
+						{{/each}}
+					{{else}}
+					  <div id='noSessions'>No running sessions</div>
+					{{/if}}
+				</div>
 			</div>
 		</div>
 	</div>

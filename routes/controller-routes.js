@@ -2,15 +2,45 @@ var app = require('express').Router();
 var cont = require('nftrace-controller');
 var ps = require('ps-nodejs');
 
+    cont.getCurrentSessions(function(err, out){
+      if(err){
+        sessionsError = 'no running sessions';
+        return;
+      }
+      sessions = out.command.output[0].sessions[0].session;
+      if(sessions){
+        var i = 0;
+        getBetterSessionInfo(i);
+
+        function getBetterSessionInfo(i){
+          if(i === sessions.length){
+            return;
+          }
+          var thingy = sessions[i];
+          cont.getSessionInfo(thingy.name[0], function(err, out){
+            if(err){
+              return;
+            }
+            //access events with
+            // sessions[i].domains[0].domain[0].channels[0].channel[0].events[0].event
+            sessions[i] = out.command.output[0].sessions[0].session[0];
+            getBetterSessionInfo(++i);
+          });
+        }
+      }
+    });
+
 /* GET home page. */
 app.get('/', function(req, res, next) {
   var processes = false, 
       processesError = false, 
       kernel = false, 
-      kernelError = false;
+      kernelError = false,
+      sessions = false,
+      sessionsError= false;
   getUserlandEvents();
 
-  function getUserlandEvents(cb){
+  function getUserlandEvents(){
     cont.listUserlandEvents(function(err, out){
       if(err){
         processesError = 'Problem listing userland tracepoints';
@@ -54,26 +84,46 @@ app.get('/', function(req, res, next) {
       if(err){
         kernelError = 'Problem listing kernel tracepoints, ' +
                       'is lttng-sessiond running as root?';
-        finish();
+        getCurrentSessions();
         return;
       }
       kernel = out.command.output[0].domains[0]
                             .domain[0].events[0].event;
-      finish();
+      getCurrentSessions();
     });
     return;
   }
 
-  function finish(){
-    res.render('index',
-      {
-        title: 'nftrace controller',
-        processes: processes,
-        processesError: processesError,
-        kernelTracepoints: kernel,
-        kernelError: kernelError
+  function getCurrentSessions(){
+    cont.getCurrentSessions(function(err, out){
+      if(err){
+        sessionsError = 'no running sessions';
+        finish();
+        return;
       }
-    );
+      sessions = out.command.output[0].sessions[0].session;
+      if(sessions){
+        for(var i = 0; i < sessions.length; i++){
+          var thingy = sessions[i];
+
+        }
+      }
+      finish();
+    });
+  } 
+
+  function finish(){
+    var out =  {
+      title: 'nftrace controller',
+      processes: processes,
+      processesError: processesError,
+      kernelTracepoints: kernel,
+      kernelError: kernelError,
+      sessions: sessions,
+      sessionsError: sessionsError
+    };
+    console.log(out);
+    res.render('index', out);
   }
   
 });

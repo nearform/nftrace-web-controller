@@ -12,9 +12,9 @@ $('button#startTracing').click(function(){
     } else {
     	customTracepoints = [];
     }
-
+    var session = "nftraceSession"+numSessions
     var ajaxData = {
-    	session: "nftraceSession"+numSessions,
+    	session: session,
     	processes: processes,
     	individualProcessTps: individualProcessTps.filter(function(elem){
     		return processes.indexOf(elem.split(';')[1]) < 0;
@@ -29,29 +29,34 @@ $('button#startTracing').click(function(){
     	success: function(data){
     		console.log(data);
     		if(data){
-    			var text = '<div id="session' + numSessions +'">\n' +
+    			var text = '<div id="session' + session +'">\n' +
     					'<div class="panel panel-default">\n'+
     						'<div class="panel-heading">\n'+
-    							'<h5> Session ' + numSessions + '</h5>'+
+    							'<h5> Session ' + session + '</h5>'+
     						'</div>\n'+
     						'<div class="panel-body">\n'+
     							'<p>'+
     								'additional info to be put in here later...'+
     							'</p>\n'+
-    							'<button class="btn btn-danger" type="submit" id="stopTracing" data="' + numSessions + '">Stop tracing session</button>' +
-    							'<button class="btn btn-info" type="submit" id="viewTrace" data="' + numSessions + '">View tracing session</button>' +
+    							'<button class="btn btn-danger" type="submit" id="stopTracing" data="' + session + '">Stop tracing session</button>' +
+    							'<button class="btn btn-info" type="submit" id="viewTrace" data="' + session + '">View tracing session</button>' +
     						'</div>\n'+
     					'</div>\n'+
     				'</div>\n';
     			$('div#activeTraceSessions').append(text);
     			numSessions++;
     		}
+            if($('div#noSessions').text() === 'No running sessions'){
+                $('div#noSessions').remove();
+            }
     		initSessionDiv();
     	}
     });
 });
 
 var socket, socketInit = false;
+
+initSessionDiv();
 
 function initSessionDiv(){
 
@@ -60,18 +65,20 @@ function initSessionDiv(){
     }
 
 	$('button#stopTracing').click(function(){
-		var sess = $(this).attr("data");
+		var session = $(this).attr("data");
 		$.ajax({
     		url: "/stopTracing",
-    		data: {session: 'nftraceSession' + sess},
+    		data: {session: session},
     		success: function(data){
-    			console.log(data);
     			if(data){
-    				$('div#session'+sess).remove();
+    				$('div#session'+session).remove();
                     $('button#stopTracing').filter(function(){
-                        return $(this).attr("data") === sess;
+                        return $(this).attr("data") === session;
                     }).remove();
-                    socket.emit('stopTrace', {session: sess});
+                    if($('div#activeTraceSessions').text().trim() === ''){
+                        $('div#activeTraceSessions').html('<div id="noSessions">No running sessions</div>')
+                    }
+                    socket.emit('stopTrace', {session: session});
                 }
     		}
     	});
@@ -80,16 +87,16 @@ function initSessionDiv(){
 	$('button#viewTrace').click(function(){
 
         $('button#viewTrace').remove();
-        var sess = $(this).attr("data");
+        var session = $(this).attr("data");
 		var div = $('div#viewevents');
-		div.append('<div class="panel panel-default" id="viewtracepanel'+sess+'"><div class="panel-heading"><h5>Trace view for session '+
-                    sess+'</h5> <button class="btn btn-danger" type="submit" id="stopTracing" data="' + sess + 
-                    '">Stop tracing session</button></div><div class="panel-body fixed-panel" id="viewtrace' + sess + '"></div></div>');
+		div.append('<div class="panel panel-default" id="viewtracepanel'+session+'"><div class="panel-heading"><h5>Trace view for session '+
+                    session+'</h5> <button class="btn btn-danger" type="submit" id="stopTracing" data="' + session + 
+                    '">Stop tracing session</button></div><div class="panel-body fixed-panel" id="viewtrace' + session + '"></div></div>');
 
-        socket.emit('viewTrace', {session: sess})
+        socket.emit('viewTrace', {session: session})
 
-		socket.on('traceData'+sess, function(data){
-            var div = $('div#viewtrace' + sess);
+		socket.on('traceData'+session, function(data){
+            var div = $('div#viewtrace' + session);
             var output = '<p>Host: ' + data.host + '. Tracepoint: ' + data.name + '. CPU: ' + data.cpuId + ' Time: ' + data.time + '. <p class="indent">';
             var info = Object.keys(data.eventData);
             info.forEach(function(elem){
@@ -97,7 +104,7 @@ function initSessionDiv(){
             });
             output += '</p></p>'
 			div.append(output);
-             $('div#viewtrace' + sess).scrollTop($('div#viewtrace' + sess)[0].scrollHeight);
+             $('div#viewtrace' + session).scrollTop($('div#viewtrace' + session)[0].scrollHeight);
 		});
         initSessionDiv();
 	});
