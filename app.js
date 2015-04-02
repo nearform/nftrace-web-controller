@@ -58,20 +58,26 @@ io.on('connection', function(socket){
 
   socket.on('viewTrace', function(data){
     console.log(data.session);
-    var pt = new stream.PassThrough({objectMode: true});
-    cont.getEventStream(pt);
-    activeSessions.push('nftraceSession' + data.session);
-
-    pt.on('readable', function(){
-      var chunk;
-      while(null !== (chunk = pt.read())){
-        socket.emit('traceData'+data.session, chunk);
+    cont.useSession(data.session, function(err){
+      if(err){
+        //brainfuck
       }
-    });
+      var pt = new stream.PassThrough({objectMode: true});
+      cont.getEventStream(pt);
+      activeSessions.push('nftraceSession' + data.session);
 
-    connEvents.once('stop'+data.session, function(){
-      pt.destroy();
-    })
+      pt.on('readable', function(){
+        var chunk;
+        while(null !== (chunk = pt.read())){
+          socket.emit('traceData'+data.session, chunk);
+        }
+      });
+
+      connEvents.once('stop'+data.session, function(){
+        pt.destroy();
+      })
+    });
+    
   });
 
   socket.on('stopTrace', function(data){
