@@ -80,6 +80,10 @@ function initSessionDiv(){
                     $('div#session'+session).find('.panel-body').append('<button class="btn btn-warning" type="submit" id="stopTracing" data="' + session + 
                     '">Stop tracing session</button><button class="btn btn-info" type="submit" id="viewTrace" data="' + session + 
                     '">View live tracing session</button>');
+                    if($('div#viewevents').find('#viewtracepanel'+session).length){
+                        var div = $('div#viewevents').find('#viewtracepanel'+session).find('.panel-heading');
+                        div.append('<button class="btn btn-warning" type="submit" id="stopTracing" data="' + session + '">Stop tracing session</button>');
+                    }
                     initSessionDiv();
                 }
             }
@@ -101,6 +105,10 @@ function initSessionDiv(){
                     $('button#viewTrace').filter(function(){
                         return $(this).attr("data") === session;
                     }).remove();
+                    if($('div#viewevents').find('#viewtracepanel'+session).length){
+                        var div = $('div#viewevents').find('#viewtracepanel'+session).find('.panel-heading');
+                        div.append('<button class="btn btn-warning" type="submit" id="startTracing" data="' + session + '">Start tracing session</button>');
+                    }
                     $('div#session'+session).find('.panel-body').append('<button class="btn btn-warning" type="submit" id="startTracing" data="' + session + 
                     '">Start tracing session</button>');
                     initSessionDiv();
@@ -119,7 +127,13 @@ function initSessionDiv(){
                 if(data){
                     $('div#session'+session).remove();
                     //keep the deletion below to delete any stopTracing buttons on a viewTrace session
+                    $('button#startTracing').filter(function(){
+                        return $(this).attr("data") === session;
+                    }).remove();
                     $('button#stopTracing').filter(function(){
+                        return $(this).attr("data") === session;
+                    }).remove();
+                    $('button#destroySession').filter(function(){
                         return $(this).attr("data") === session;
                     }).remove();
                     if($('div#activeTraceSessions').text().trim() === ''){
@@ -134,11 +148,15 @@ function initSessionDiv(){
 
         $('button#viewTrace').remove();
         var session = $(this).attr("data");
-		var div = $('div#viewevents');
-		div.append('<div class="panel panel-default" id="viewtracepanel'+session+'"><div class="panel-heading"><h5>Trace view for session '+
-                    session+'</h5> <button class="btn btn-danger" type="submit" id="stopTracing" data="' + session + 
+		var div = $('div#viewevents').find('#viewtracepanel'+session);
+        if(!div.length){
+            div = $('div#viewevents');
+            div.append('<div class="panel panel-default" id="viewtracepanel'+session+'"><div class="panel-heading"><h5>Trace view for session '+
+                    session+'</h5> <button class="btn btn-danger" type="submit" id="destroySession" data="' + session + 
+                    '">Destroy tracing session</button><button class="btn btn-warning" type="submit" id="stopTracing" data="' + session + 
                     '">Stop tracing session</button></div><div class="panel-body fixed-panel" id="viewtrace' + session + '"></div></div>');
-
+        }
+		
         socket.emit('viewTrace', {session: session})
 
 		socket.on('traceData'+session, function(data){
