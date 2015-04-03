@@ -1,6 +1,10 @@
 <div class='jumbotron'>
-	<h1>{{title}}</h1>
-	<p>Welcome to {{title}}. A tool for tracing linux with node.js.</p>
+	<h1>
+		{{title}}
+	</h1>
+	<p>
+		Welcome to {{title}}. A tool for tracing linux with node.js.
+	</p>
 </div>
 
 <div class="container">
@@ -10,7 +14,9 @@
 				<div class="panel panel-default" id='tracepointSections'>
 					<div class="panel-heading" id='userlandSection'>
 						<a class="panel-title" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-							<h4>Userland Tracepoints.</h4>
+							<h4>
+								Userland Tracepoints.
+							</h4>
 						</a>
 					</div>
 					<div id="collapseOne" class="panel-collapse collapse" aria-expanded="false">
@@ -44,9 +50,11 @@
 														{{#each events}}
 															<div id ='tracepoint'>
 																<label class="checkbox-inline">
-							    	        			<input type="checkbox" id="procTPCheck" name="procTPCheck" data="{{name}};{{../id}}"> {{name}} (loglevel:{{loglevel}}) (type:{{type}}) </input>
-							    	    				</label>
-							    	    			</div>
+							    	        						<input type="checkbox" id="procTPCheck" name="procTPCheck" data="{{name}};{{../id}}"> 
+							    	        							{{name}} (loglevel:{{loglevel}}) (type:{{type}}) 
+							    	        						</input>
+							    	    						</label>
+							    	    					</div>
 														{{/each}}
 													</div>
 												</div>
@@ -67,7 +75,9 @@
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<a class="panel-title" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-							<h4>Kernel Tracepoints.</h4>
+							<h4>
+								Kernel Tracepoints.
+							</h4>
 						</a>
 					</div>
 					<div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false">
@@ -77,7 +87,9 @@
 									{{#each kernelTracepoints}}
 										<div id='kernelTracepoint'>
 											<label class="checkbox-inline">
-							            		<input type="checkbox" id="kernelTP" name="kernelTP" data="{{name}}"> {{name}} (loglevel:{{loglevel}}) (type:{{type}}) </input>
+							            		<input type="checkbox" id="kernelTP" name="kernelTP" data="{{name}}">
+							            			{{name}} (loglevel:{{loglevel}}) (type:{{type}}) 
+							            		</input>
 							        		</label>
 										</div>
 									{{/each}}
@@ -99,40 +111,69 @@
 		<div class="col-sm-4">
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<h4> Session Controller </h4>
+					<h4> 
+						Session Controller 
+					</h4>
 				</div>
 				<div class="panel-body" id="sessionController">
-					<label>Comma seperated custom userland tracepoints (e.g. node:*,node:gc*,myNamespace:my_tracepoint)</label> <br>
-    					<textarea class="form-control" rows="3" id="customTracepoints"> </textarea>
-    					<br>
-    					<button class="btn btn-default" type="submit" id="startTracing">Start tracing session</button>
+					<label>
+						Comma seperated custom userland tracepoints (e.g. node:*,node:gc*,myNamespace:my_tracepoint)
+					</label> 
+					<br>
+    				<textarea class="form-control" rows="3" id="customTracepoints"></textarea>
+    				<br>
+    				<button class="btn btn-default" type="submit" id="createSession">
+    					Create tracing session
+    				</button>
 				</div>
 			</div>
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<h4> current sessions </h4>
+					<h4> 
+						Current Sessions 
+					</h4>
 				</div>
 				<div class="panel-body" id="activeTraceSessions">
-					{{#if sessions}}
-						{{#each sessions}}
-							<div id="session{{#each name}}{{this}}{{/each}}">
+					{{#each sessions}}
+						<div id="session{{#each name}}{{this}}{{/each}}">
     						<div class="panel panel-default">
     							<div class="panel-heading">
-    								<h5> Session {{#each name}} {{this}} {{/each}}</h5>
+    								<h5> 
+    									Session {{#each name}} {{this}} {{/each}}
+    								</h5>
     							</div>
     							<div class="panel-body">
+    								<div class="well well-sm" id='{{#each name}}{{this}}{{/each}}status'>
+    									{{#each enabled}} {{#checkStringTrue this}} Started {{else}} Stopped {{/checkStringTrue}} {{/each}} 
+    								</div>
     								<p>
     									additional info to be put in here later...
     								</p>
-    								<button class="btn btn-danger" type="submit" id="stopTracing" data="{{#each name}}{{this}}{{/each}}">Stop tracing session</button>
-    								<button class="btn btn-info" type="submit" id="viewTrace" data="{{#each name}}{{this}}{{/each}}">View tracing session</button>
+    								<button class="btn btn-danger" type="submit" id="destroySession" data="{{#each name}}{{this}}{{/each}}">
+    									Destroy tracing session
+    								</button>
+    								{{#each enabled}} 
+    									{{#checkStringTrue this}} 
+    										<button class="btn btn-warning" type="submit" id="stopTracing" data="{{#each ../../name}}{{this}}{{/each}}">
+    											Stop tracing session
+    										</button>
+    										<button class="btn btn-info" type="submit" id="viewTrace" data="{{#each ../../name}}{{this}}{{/each}}">
+    											View tracing session
+    										</button> 
+    									{{else}} 
+    										<button class="btn btn-warning" type="submit" id="startTracing" data="{{#each ../../name}}{{this}}{{/each}}">
+    											Start tracing session
+    										</button>
+    									{{/checkStringTrue}} 
+    								{{/each}}
     							</div>
     						</div>
     					</div>
-						{{/each}}
 					{{else}}
-					  <div id='noSessions'>No running sessions</div>
-					{{/if}}
+					  <div id='noSessions'>
+					  	No running sessions
+					  </div>
+					{{/each}}
 				</div>
 			</div>
 		</div>

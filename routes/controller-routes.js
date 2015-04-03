@@ -2,33 +2,34 @@ var app = require('express').Router();
 var cont = require('nftrace-controller');
 var ps = require('ps-nodejs');
 
-    cont.getCurrentSessions(function(err, out){
-      if(err){
-        sessionsError = 'no running sessions';
+cont.getCurrentSessions(function(err, out){
+  if(err){
+    sessionsError = 'no running sessions';
+    return;
+  }
+  sessions = out.command.output[0].sessions[0].session;
+  if(sessions){
+    var i = 0;
+    getBetterSessionInfo(i);
+
+    function getBetterSessionInfo(i){
+      if(i === sessions.length){
         return;
       }
-      sessions = out.command.output[0].sessions[0].session;
-      if(sessions){
-        var i = 0;
-        getBetterSessionInfo(i);
-
-        function getBetterSessionInfo(i){
-          if(i === sessions.length){
-            return;
-          }
-          var thingy = sessions[i];
-          cont.getSessionInfo(thingy.name[0], function(err, out){
-            if(err){
-              return;
-            }
-            //access events with
-            // sessions[i].domains[0].domain[0].channels[0].channel[0].events[0].event
-            sessions[i] = out.command.output[0].sessions[0].session[0];
-            getBetterSessionInfo(++i);
-          });
+      var thingy = sessions[i];
+      cont.getSessionInfo(thingy.name[0], function(err, out){
+        if(err){
+          return;
         }
-      }
-    });
+        //access events with
+        // sessions[i].domains[0].domain[0].channels[0].channel[0].events[0].event
+        sessions[i] = out.command.output[0].sessions[0].session[0];
+        console.log(sessions[i]);
+        getBetterSessionInfo(++i);
+      });
+    }
+  }
+});
 
 /* GET home page. */
 app.get('/', function(req, res, next) {
@@ -122,15 +123,14 @@ app.get('/', function(req, res, next) {
       sessions: sessions,
       sessionsError: sessionsError
     };
-    console.log(out);
+    //console.log(out);
     res.render('index', out);
   }
   
 });
 
-app.get('/startTracing', function(req, res, next) {
+app.get('/createSession', function(req, res){
   var session = req.query.session;
-
   // create the session
   cont.createSession(session, function(err){
     if(err){
@@ -139,7 +139,7 @@ app.get('/startTracing', function(req, res, next) {
     doKernelTps();
   });
 
-  // the functions below enable events on the tracing session
+   // the functions below enable events on the tracing session
   function doKernelTps(){
     if(req.query.kernelTps){
       var tps = req.query.kernelTps;
@@ -235,28 +235,41 @@ app.get('/startTracing', function(req, res, next) {
 
   // the following starts the session and returns true to the client
   function finishSuccessfully(){
-    cont.start(session, function(err){
-      if(err){
-        return finishUnsuccessfully();
-      }
-      res.send(true);
-    })
+    res.send(true);
   }
 
   function finishUnsuccessfully(){
     res.send(false);
   }
+})
+
+app.get('/startTracing', function(req, res, next) {
+  var session = req.query.session;
+  cont.start(session, function(err, out){
+    if(err){
+      return res.send(false);
+    }
+    res.send(true);
+  });
 });
 
 app.get('/stopTracing', function(req, res, next) {
   var session = req.query.session;
   cont.stop(session, function(err){
-    cont.destroy(session, function(err){
-      if(err){
-        return res.send(false);
-      }
-      res.send(true);
-    })
+    if(err){
+      return res.send(false);
+    }
+    res.send(true);
+  });
+});
+
+app.get('/destroySession', function(req, res, next) {
+  var session = req.query.session;
+  cont.destroy(session, function(err, out){
+    if(err){
+      return res.send(false);
+    }
+    res.send(true);
   });
 });
 

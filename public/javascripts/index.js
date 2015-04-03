@@ -1,7 +1,7 @@
 var processes = [], individualProcessTps = [], kernelTps = [];
 var numSessions = 0;
 
-$('button#startTracing').click(function(){
+$('button#createSession').click(function(){
     var customTracepoints = $('textarea#customTracepoints').val();
     customTracepoints = customTracepoints.replace(/ /g, '');
     if(customTracepoints !== ''){
@@ -24,7 +24,7 @@ $('button#startTracing').click(function(){
     }
 
     $.ajax({
-    	url: "/startTracing",
+    	url: "/createSession",
     	data: ajaxData,
     	success: function(data){
     		console.log(data);
@@ -35,11 +35,14 @@ $('button#startTracing').click(function(){
     							'<h5> Session ' + session + '</h5>'+
     						'</div>\n'+
     						'<div class="panel-body">\n'+
+                                '<div class="well well-sm" id="'+session+'status">'+
+                                    'Stopped'+
+                                '</div>'+
     							'<p>'+
     								'additional info to be put in here later...'+
     							'</p>\n'+
-    							'<button class="btn btn-danger" type="submit" id="stopTracing" data="' + session + '">Stop tracing session</button>' +
-    							'<button class="btn btn-info" type="submit" id="viewTrace" data="' + session + '">View tracing session</button>' +
+                                '<button class="btn btn-danger" type="submit" id="destroySession" data="' + session + '">Destroy tracing session</button>' +
+                                '<button class="btn btn-warning" type="submit" id="startTracing" data="' + session + '">Start tracing session</button>' +
     						'</div>\n'+
     					'</div>\n'+
     				'</div>\n';
@@ -54,35 +57,78 @@ $('button#startTracing').click(function(){
     });
 });
 
-var socket, socketInit = false;
+var socket = io();
 
 initSessionDiv();
 
 function initSessionDiv(){
 
-    if(!socketInit){
-        socket = io();
-    }
+    $('button#startTracing').click(function(){
+        var session = $(this).attr("data");
+        $.ajax({
+            url: "/startTracing",
+            data: {session: session},
+            success: function(data){
+                if(data){
+                    //delete startTracing button
+                    $('button#startTracing').filter(function(){
+                        return $(this).attr("data") === session;
+                    }).remove();
+                    //set status to started
+                    $('div#'+session+'status').html('Started');
+                    //add buttons to view and stop the tracing
+                    $('div#session'+session).find('.panel-body').append('<button class="btn btn-warning" type="submit" id="stopTracing" data="' + session + 
+                    '">Stop tracing session</button><button class="btn btn-info" type="submit" id="viewTrace" data="' + session + 
+                    '">View live tracing session</button>');
+                    initSessionDiv();
+                }
+            }
+        });
+    });    
 
 	$('button#stopTracing').click(function(){
 		var session = $(this).attr("data");
+        socket.emit('stopTracing', {session: session});
 		$.ajax({
     		url: "/stopTracing",
     		data: {session: session},
     		success: function(data){
     			if(data){
-    				$('div#session'+session).remove();
+                    $('div#'+session+'status').html('Stopped');
+                    $('button#stopTracing').filter(function(){
+                        return $(this).attr("data") === session;
+                    }).remove();
+                    $('button#viewTrace').filter(function(){
+                        return $(this).attr("data") === session;
+                    }).remove();
+                    $('div#session'+session).find('.panel-body').append('<button class="btn btn-warning" type="submit" id="startTracing" data="' + session + 
+                    '">Start tracing session</button>');
+                    initSessionDiv();
+                }
+    		}
+    	});
+	});
+
+    $('button#destroySession').click(function(){
+        var session = $(this).attr("data");
+        socket.emit('stopTracing', {session: session});
+        $.ajax({
+            url: "/destroySession",
+            data: {session: session},
+            success: function(data){
+                if(data){
+                    $('div#session'+session).remove();
+                    //keep the deletion below to delete any stopTracing buttons on a viewTrace session
                     $('button#stopTracing').filter(function(){
                         return $(this).attr("data") === session;
                     }).remove();
                     if($('div#activeTraceSessions').text().trim() === ''){
                         $('div#activeTraceSessions').html('<div id="noSessions">No running sessions</div>')
                     }
-                    socket.emit('stopTrace', {session: session});
                 }
-    		}
-    	});
-	});
+            }
+        });
+    });
 
 	$('button#viewTrace').click(function(){
 
