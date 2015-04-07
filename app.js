@@ -6,10 +6,8 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var stream = require('stream');
-var EventEmitter = require('events').EventEmitter;
-
-var cont = require('nftrace-controller');
 var routes = require('./routes/controller-routes.js')
+var SocketioStream = require('./socketioStream.js');
 
 var app = express();
 
@@ -49,40 +47,6 @@ app.use(function(err, req, res, next) {
 
 var server = http.createServer(app).listen(port);
 
-var io = require('socket.io').listen(server);
-
-io.on('connection', function(socket){
-  console.log('connected');
-  var activeSessions = [];
-  var connEvents = new EventEmitter();
-
-  socket.on('viewTrace', function(data){
-    console.log(data.session);
-    cont.useSession(data.session, function(err){
-      if(err){
-        //brainfuck
-      }
-      var pt = new stream.PassThrough({objectMode: true});
-      cont.getEventStream(pt);
-      activeSessions.push('nftraceSession' + data.session);
-
-      pt.on('readable', function(){
-        var chunk;
-        while(null !== (chunk = pt.read())){
-          socket.emit('traceData'+data.session, chunk);
-        }
-      });
-
-      connEvents.once('stop'+data.session, function(){
-        pt.destroy();
-      })
-    });
-    
-  });
-
-  socket.on('stopTrace', function(data){
-    connEvents.emit('stop'+data.session);
-  });
-});
+var socketioStream = new SocketioStream(server);
 
 console.log("Server listening on port " + port);
