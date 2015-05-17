@@ -160,15 +160,18 @@ function initSessionDiv(){
         socket.emit('viewTrace', {session: session})
 
 		socket.on('traceData'+session, function(data){
+            console.log(data);
             var div = $('div#viewtrace' + session);
-            var output = '<p>Host: ' + data.host + '. Tracepoint: ' + data.name + '. CPU: ' + data.cpuId + ' Time: ' + data.time + '. <p class="indent">';
-            var info = Object.keys(data.eventData);
+            var output = '<p><strong>Host</strong>: ' + data.host + '. <strong>Tracepoint</strong>: ' + data.tracepoint 
+                        + '. <strong>CPU</strong>: ' + data.cpu_id + ' <strong>Time</strong>: ' + data.time 
+                        + '. <p class="indent">';
+            var info = Object.keys(data.eventData[0]);
             info.forEach(function(elem){
-                output += elem + ': ' + data.eventData[elem] + '. ';
+                output += '<strong>' + elem + '</strong>: ' + data.eventData[0][elem] + '. ';
             });
             output += '</p></p>'
 			div.append(output);
-             $('div#viewtrace' + session).scrollTop($('div#viewtrace' + session)[0].scrollHeight);
+            $('div#viewtrace' + session).scrollTop($('div#viewtrace' + session)[0].scrollHeight);
 		});
         initSessionDiv();
 	});

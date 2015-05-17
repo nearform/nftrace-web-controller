@@ -5,9 +5,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var stream = require('stream');
-var routes = require('./routes/controller-routes.js')
-var SocketioStream = require('./socketioStream.js');
+
+
+var wraparound = require('./controller-wraparound/wraparound');
 
 var app = express();
 
@@ -28,7 +28,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes)
+
+var microControllerRoutes = require('./routes/micro-controller-routes.js')(wraparound);
+
+app.use('/', controllerRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -45,8 +48,4 @@ app.use(function(err, req, res, next) {
   });
 });
 
-var server = http.createServer(app).listen(port);
-
-var socketioStream = new SocketioStream(server);
-
-console.log("Server listening on port " + port);
+module.exports = app;

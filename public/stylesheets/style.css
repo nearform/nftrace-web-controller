@@ -4,9 +4,9 @@ html {
 }
 
 body {
-  	/* Margin bottom by footer height */
-  	margin-bottom: 40px;
-  	background-color: #F5F5F4;
+  /* Margin bottom by footer height */
+  margin-bottom: 40px;
+  background-color: #F5F5F4;
 	font-family: Palatino,"Palatino Linotype","Palatino LT STD","Book Antiqua",Georgia,serif;
 	color: #3D3D3D;
 }
