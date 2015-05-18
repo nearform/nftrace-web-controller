@@ -108,15 +108,6 @@ var getCurrentLttngSessions = function(cb){
         return cb(sessionsError, currentSessions);
       }      
       currentSessions = out.command.output[0].sessions[0].session;
-      // Uhh... I swear I was planning on doing some cool stuff with the empty code block below!
-      /*
-      if(currentSessions){
-        for(var i = 0; i < currentSessions.length; i++){
-          var thingy = currentSessions[i];
-
-        }
-      }
-      //*/
       return cb(sessionsError, currentSessions);
     });
 };
@@ -216,6 +207,11 @@ var viewTrace = function(session, ws){
   }
 }
 
+var stopViewingTrace = function(session, cb){
+  pipesForActiveTraceSessions[session + 'pipe'] = null;
+  return cb(true);
+};
+
 
 module.exports = {
   getActiveUserlandTracepoints: getActiveUserlandTracepoints,
@@ -227,7 +223,8 @@ module.exports = {
   startTracing: startTracing,
   stopTracing: stopTracing,
   destroyTracingSession: destroyTracingSession,
-  viewTrace: viewTrace
+  viewTrace: viewTrace,
+  stopViewingTrace: stopViewingTrace
 };
 
 
